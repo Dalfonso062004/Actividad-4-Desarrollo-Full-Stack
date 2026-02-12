@@ -5,5 +5,6 @@ module.exports = {
   verbose: true,
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  setupFilesAfterEnv: ['./tests/setup.js']
+  setupFilesAfterEnv: ['./tests/setup.js'],
+  setupFiles: ['dotenv/config']
 };
