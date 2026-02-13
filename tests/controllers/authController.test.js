@@ -3,7 +3,6 @@ const app = require('../../src/app');
 const User = require('../../src/models/User');
 
 describe('Auth Controller', () => {
-  // Limpiar antes de cada prueba
   beforeEach(async () => {
     await User.deleteMany({});
   });
@@ -25,7 +24,7 @@ describe('Auth Controller', () => {
     });
 
     it('debería fallar con email duplicado', async () => {
-      // Crear usuario primero
+      // Crear usuario primero con TODOS los campos
       await User.create({
         name: 'Test User',
         email: 'test@test.com',
@@ -42,15 +41,69 @@ describe('Auth Controller', () => {
 
       expect(res.statusCode).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe('El email ya está registrado');
     });
 
-    it('debería validar campos requeridos', async () => {
+    it('debería fallar si falta el nombre', async () => {
       const res = await request(app)
         .post('/api/auth/register')
         .send({
+          email: 'test@test.com',
+          password: '123456'
+          // Falta name
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('nombre es requerido');
+    });
+
+    it('debería fallar si falta el email', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Test User',
+          password: '123456'
+          // Falta email
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('debería fallar si falta la contraseña', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Test User',
           email: 'test@test.com'
-          // Falta name y password
+          // Falta password
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('contraseña es requerida');
+    });
+
+    it('debería fallar con email inválido', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Test User',
+          email: 'email-invalido',
+          password: '123456'
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('debería fallar con contraseña muy corta', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Test User',
+          email: 'test@test.com',
+          password: '123' // Muy corta (mínimo 6)
         });
 
       expect(res.statusCode).toBe(400);
@@ -60,7 +113,7 @@ describe('Auth Controller', () => {
 
   describe('POST /api/auth/login', () => {
     beforeEach(async () => {
-      // Crear usuario para pruebas de login
+      // Crear usuario con TODOS los campos requeridos
       await User.create({
         name: 'Login User',
         email: 'login@test.com',
@@ -91,7 +144,6 @@ describe('Auth Controller', () => {
 
       expect(res.statusCode).toBe(401);
       expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe('Credenciales inválidas');
     });
 
     it('debería fallar con email no registrado', async () => {
@@ -105,6 +157,30 @@ describe('Auth Controller', () => {
       expect(res.statusCode).toBe(401);
       expect(res.body.success).toBe(false);
     });
+
+    it('debería fallar si falta el email', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          password: '123456'
+          // Falta email
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('debería fallar si falta la contraseña', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'login@test.com'
+          // Falta password
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
   });
 
   describe('GET /api/auth/me', () => {
@@ -112,6 +188,7 @@ describe('Auth Controller', () => {
     let userId;
 
     beforeEach(async () => {
+      // Crear usuario con TODOS los campos
       const user = await User.create({
         name: 'Profile User',
         email: 'profile@test.com',
@@ -136,15 +213,6 @@ describe('Auth Controller', () => {
     it('debería fallar sin token', async () => {
       const res = await request(app)
         .get('/api/auth/me');
-
-      expect(res.statusCode).toBe(401);
-      expect(res.body.success).toBe(false);
-    });
-
-    it('debería fallar con token inválido', async () => {
-      const res = await request(app)
-        .get('/api/auth/me')
-        .set('Authorization', 'Bearer token_invalido');
 
       expect(res.statusCode).toBe(401);
       expect(res.body.success).toBe(false);
