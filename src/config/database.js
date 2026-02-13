@@ -1,7 +1,7 @@
-// src/config/database.js - VERSIÓN CORREGIDA PARA VERCEL
+// src/config/database.js - VERSIÓN CORREGIDA
 const mongoose = require('mongoose');
 
-// Variable global para cachear la conexión (importante para serverless)
+// Variable global para cachear la conexión
 let cachedConnection = null;
 
 const connectDB = async () => {
@@ -18,35 +18,29 @@ const connectDB = async () => {
     }
 
     console.log('Conectando a MongoDB...');
+    console.log('URI:', process.env.MONGODB_URI.replace(/:[^:@]*@/, ':****@')); // Oculta la contraseña
     
+    // ✅ OPCIONES ACTUALIZADAS (sin useNewUrlParser ni useUnifiedTopology)
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // Configuración importante para serverless
       maxPoolSize: 10,
       minPoolSize: 1,
-      maxIdleTimeMS: 10000,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000, // Aumentar timeout
       socketTimeoutMS: 45000,
     });
 
     cachedConnection = conn;
-    console.log(`MongoDB conectado: ${conn.connection.host}`);
+    console.log(`✅ MongoDB conectado: ${conn.connection.host}`);
     return conn;
   } catch (error) {
-    console.error('Error detallado de conexión MongoDB:', {
+    console.error('❌ Error detallado de conexión MongoDB:', {
       message: error.message,
       code: error.code,
       name: error.name
     });
-    
-    // En Vercel, no queremos que el proceso termine
-    // Solo lanzamos el error para manejarlo arriba
     throw error;
   }
 };
 
-// Función para verificar la conexión
 const checkConnection = () => {
   return mongoose.connection.readyState === 1;
 };
