@@ -1,3 +1,4 @@
+// src/controllers/productController.js
 const Product = require('../models/Product');
 const AppError = require('../utils/appError');
 
@@ -85,7 +86,14 @@ const deleteProduct = async (req, res, next) => {
       return next(new AppError('Producto no encontrado', 404));
     }
 
-    await product.remove();
+    // ✅ SOLUCIÓN 1: Usar deleteOne() (RECOMENDADA)
+    await product.deleteOne();
+    
+    // ✅ SOLUCIÓN 2: Usar findByIdAndDelete()
+    // await Product.findByIdAndDelete(req.params.id);
+    
+    // ✅ SOLUCIÓN 3: Usar deleteMany() con condición
+    // await Product.deleteOne({ _id: req.params.id, user: req.user.id });
 
     res.status(200).json({
       success: true,
