@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 // Cargar variables de entorno para pruebas
 dotenv.config({ path: '.env.test' });
 
-// Establecer JWT_SECRET para pruebas si no existe
+// Establecer JWT_SECRET para pruebas
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test_jwt_secret_key_123456';
 
 let mongoServer;
@@ -22,8 +22,17 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
+  // Limpiar TODAS las colecciones después de cada prueba
   const collections = mongoose.connection.collections;
   for (const key in collections) {
-    await collections[key].deleteMany();
+    await collections[key].deleteMany({});
+  }
+});
+
+// Limpiar también al inicio de cada archivo de prueba
+beforeEach(async () => {
+  const collections = mongoose.connection.collections;
+  for (const key in collections) {
+    await collections[key].deleteMany({});
   }
 });
